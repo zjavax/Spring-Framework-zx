@@ -74,8 +74,8 @@ class ConfigurationClassEnhancer {
 
 	// The callbacks to use. Note that these callbacks must be stateless.
 	private static final Callback[] CALLBACKS = new Callback[] {
-			new BeanMethodInterceptor(),
-			new BeanFactoryAwareMethodInterceptor(),
+			new BeanMethodInterceptor(),  // 逻辑
+			new BeanFactoryAwareMethodInterceptor(), // //设置属性 $$beanFactory
 			NoOp.INSTANCE
 	};
 
@@ -95,6 +95,7 @@ class ConfigurationClassEnhancer {
 	 * @return the enhanced subclass
 	 */
 	public Class<?> enhance(Class<?> configClass, @Nullable ClassLoader classLoader) {
+		// 判断是否被代理过
 		if (EnhancedConfiguration.class.isAssignableFrom(configClass)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug(String.format("Ignoring request to enhance %s as it has " +
@@ -106,6 +107,7 @@ class ConfigurationClassEnhancer {
 			}
 			return configClass;
 		}
+		// cglib代理
 		Class<?> enhancedClass = createClass(newEnhancer(configClass, classLoader));
 		if (logger.isTraceEnabled()) {
 			logger.trace(String.format("Successfully enhanced %s; enhanced class name is: %s",
@@ -119,11 +121,24 @@ class ConfigurationClassEnhancer {
 	 */
 	private Enhancer newEnhancer(Class<?> configSuperClass, @Nullable ClassLoader classLoader) {
 		Enhancer enhancer = new Enhancer();
+		// 增强父类，cglib代理是基于继承的
 		enhancer.setSuperclass(configSuperClass);
+		// 增强接口，为什么要增强接口
+		// 便于判断，表示一个类已经被增强了
+		// 将其的接口设置为EnhancedConfiguration加强功能
 		enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});
+		// 不知道
 		enhancer.setUseFactory(false);
 		enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+		// BeanFactoryAwareGeneratorStrategy是一个生成策略
+		// 主要为生成的cglib类中添加成员变量$$beanfactory
+		// 同时基于接口EnhancedConfiguration extends BeanFactoryAware里的setBeanFactory方法 （ConfigurationClassEnhancer.java）
+		// 设置此变量的值为当前context中的beanfactory，这样一来我们这个cglib代理的对象就有了beanfactory
+		// 有了factory就能获得对象，而不用通过方法获取对象了，因为通过方法获得对象不能控制器过程
+		// 该beanfactory的作用是在this调用时拦截该调用，并直接在beanfactory中获得目标bean
 		enhancer.setStrategy(new BeanFactoryAwareGeneratorStrategy(classLoader));
+		// 过滤方法，不能每次都去new
+		// 加强点 BeanMethodInterceptor   BeanFactoryAwareMethodInterceptor  内部执行 intercept(),在方法前后进行拦截
 		enhancer.setCallbackFilter(CALLBACK_FILTER);
 		enhancer.setCallbackTypes(CALLBACK_FILTER.getCallbackTypes());
 		return enhancer;
@@ -316,6 +331,8 @@ class ConfigurationClassEnhancer {
 		public Object intercept(Object enhancedConfigInstance, Method beanMethod, Object[] beanMethodArgs,
 					MethodProxy cglibMethodProxy) throws Throwable {
 
+			// enhancedConfigInstance 代理
+			// 通过enhancedConfigInstance中cglib生成的成员变量$$beanfactory获得beanfactory
 			ConfigurableBeanFactory beanFactory = getBeanFactory(enhancedConfigInstance);
 			String beanName = BeanAnnotationHelper.determineBeanNameFor(beanMethod);
 
@@ -346,10 +363,18 @@ class ConfigurationClassEnhancer {
 				}
 			}
 
+			// 判断执行的方法（getY2）和调用的方法（getY3）是不是同一个方法：比较名称和参数
+			// 判断给定的方法是否和容器当前调用的方法时一致，比较名称和参数
+			// 1、getY2 isCurrentlyInvokedFactoryMethod=true
+			// 2、getY3 isCurrentlyInvokedFactoryMethod=true
+			// 3、getY2 isCurrentlyInvokedFactoryMethod=false
+			// 		getY2和getY3不同，然后resolveBeanReference，发现单例池里已经有了，就不会继续创建
 			if (isCurrentlyInvokedFactoryMethod(beanMethod)) {
 				// The factory is calling the bean method in order to instantiate and register the bean
 				// (i.e. via a getBean() call) -> invoke the super implementation of the method to actually
 				// create the bean instance.
+				// 工厂正在调用bean方法以便于实例化和注册bean
+				// (即通过getbean()调用) -》 调用方法的超级实现以实际创建bean实例
 				if (logger.isInfoEnabled() &&
 						BeanFactoryPostProcessor.class.isAssignableFrom(beanMethod.getReturnType())) {
 					logger.info(String.format("@Bean method %s.%s is non-static and returns an object " +
@@ -360,9 +385,11 @@ class ConfigurationClassEnhancer {
 									"these container lifecycle issues; see @Bean javadoc for complete details.",
 							beanMethod.getDeclaringClass().getSimpleName(), beanMethod.getName()));
 				}
+				// 执行父类逻辑
 				return cglibMethodProxy.invokeSuper(enhancedConfigInstance, beanMethodArgs);
 			}
 
+			// 看这里，不用每次new  调用（$$beanfactory.getbean）factoryBean.get() -> doGetBean
 			return resolveBeanReference(beanMethod, beanMethodArgs, beanFactory, beanName);
 		}
 
@@ -390,6 +417,7 @@ class ConfigurationClassEnhancer {
 						}
 					}
 				}
+				// configurationbean不new两次：第二次取bean，发现单例池已经有了
 				Object beanInstance = (useArgs ? beanFactory.getBean(beanName, beanMethodArgs) :
 						beanFactory.getBean(beanName));
 				if (!ClassUtils.isAssignableValue(beanMethod.getReturnType(), beanInstance)) {

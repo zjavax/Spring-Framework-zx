@@ -33,7 +33,6 @@ public class ProxyConfig implements Serializable {
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
 	private static final long serialVersionUID = -8409359707199703185L;
 
-
 	private boolean proxyTargetClass = false;
 
 	private boolean optimize = false;
@@ -154,7 +153,7 @@ public class ProxyConfig implements Serializable {
 	public void copyFrom(ProxyConfig other) {
 		Assert.notNull(other, "Other ProxyConfig object must not be null");
 		this.proxyTargetClass = other.proxyTargetClass;
-		this.optimize = other.optimize;
+		this.optimize = other.optimize;       // 优化策略
 		this.exposeProxy = other.exposeProxy;
 		this.frozen = other.frozen;
 		this.opaque = other.opaque;

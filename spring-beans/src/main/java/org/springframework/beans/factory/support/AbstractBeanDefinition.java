@@ -136,7 +136,6 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 */
 	public static final String INFER_METHOD = "(inferred)";
 
-
 	@Nullable
 	private volatile Object beanClass;
 

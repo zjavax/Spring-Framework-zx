@@ -47,6 +47,7 @@ import org.springframework.stereotype.Component;
  */
 abstract class ConfigurationClassUtils {
 
+	// full 充分  lite 一点
 	private static final String CONFIGURATION_CLASS_FULL = "full";
 
 	private static final String CONFIGURATION_CLASS_LITE = "lite";
@@ -112,9 +113,16 @@ abstract class ConfigurationClassUtils {
 			}
 		}
 
+		// 判断是不是加了@Configuration
 		if (isFullConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+//		candidateIndicators.add(Component.class.getName());
+//		candidateIndicators.add(ComponentScan.class.getName());
+//		candidateIndicators.add(Import.class.getName());
+//		candidateIndicators.add(ImportResource.class.getName());
+//		metadata.hasAnnotatedMethods(Bean.class.getName());
+		// lite 精简   Candidate 候选人  Attribute属性
 		else if (isLiteConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}

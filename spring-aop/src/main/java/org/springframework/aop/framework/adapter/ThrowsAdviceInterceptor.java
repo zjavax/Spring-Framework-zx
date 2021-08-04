@@ -78,6 +78,7 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 
 		Method[] methods = throwsAdvice.getClass().getMethods();
 		for (Method method : methods) {
+			// 方法名称为afterThrowing && 方法参数为1或者4
 			if (method.getName().equals(AFTER_THROWING) &&
 					(method.getParameterCount() == 1 || method.getParameterCount() == 4)) {
 				Class<?> throwableParam = method.getParameterTypes()[method.getParameterCount() - 1];
@@ -142,6 +143,7 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 		return handler;
 	}
 
+	// 通过反射调用异常通知中的异常方法
 	private void invokeHandlerMethod(MethodInvocation mi, Throwable ex, Method method) throws Throwable {
 		Object[] handlerArgs;
 		if (method.getParameterCount() == 1) {
@@ -151,6 +153,7 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 			handlerArgs = new Object[] {mi.getMethod(), mi.getArguments(), mi.getThis(), ex};
 		}
 		try {
+			// 通过反射调用异常通知中的方法
 			method.invoke(this.throwsAdvice, handlerArgs);
 		}
 		catch (InvocationTargetException targetEx) {

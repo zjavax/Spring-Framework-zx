@@ -48,6 +48,7 @@ public interface HierarchicalBeanFactory extends BeanFactory {
 	 * @return whether a bean with the given name is defined in the local factory
 	 * @see BeanFactory#containsBean
 	 */
+	// contains 包含
 	boolean containsLocalBean(String name);
 
 }

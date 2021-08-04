@@ -43,7 +43,6 @@ public class AspectJAroundAdvice extends AbstractAspectJAdvice implements Method
 		super(aspectJAroundAdviceMethod, pointcut, aif);
 	}
 
-
 	@Override
 	public boolean isBeforeAdvice() {
 		return false;

@@ -236,6 +236,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	@Override
 	public Object getEarlyBeanReference(Object bean, String beanName) {
 		Object cacheKey = getCacheKey(bean.getClass(), beanName);
+		// org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.postProcessAfterInitialization
 		this.earlyProxyReferences.put(cacheKey, bean);
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
@@ -245,9 +246,20 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+			// 判断当前bean是否在advisedBeans中（保存了所有需要增强bean）
 			if (this.advisedBeans.containsKey(cacheKey)) {
 				return null;
 			}
+			// 加载所有增强
+			// 这个方法代码中最重要的一个方法就是shouldSkip方法了，
+
+			// 判断TargetSource缓存中是否包含当前bean，如果不包含，则判断当前bean是否是已经被代理的bean，
+			// 如果代理过，则不对当前传入的bean进行处理，如果没代理过，则判断当前bean是否为系统bean，或者是
+			// 切面逻辑不会包含的bean，如果是，则将当前bean缓存到advisedBeans中，否则继续往下执行。
+			// 经过这一步的处理之后，只有在TargetSource中没有进行缓存，并且应该被切面逻辑环绕，但是目前还未
+			// 生成代理对象的bean才会通过此方法。
+
+			// shouldSkip  是否应该跳过
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
@@ -257,12 +269,17 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy here if we have a custom TargetSource.
 		// Suppresses unnecessary default instantiation of the target bean:
 		// The TargetSource will handle target instances in a custom fashion.
+
+		// 获取封装当前bean的TargetSource对象，如果不存在，则直接退出当前方法，否则从TargetSource
+		// 中获取当前bean对象，并且判断是否需要将切面逻辑应用在当前bean上。
 		TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
 		if (targetSource != null) {
 			if (StringUtils.hasLength(beanName)) {
 				this.targetSourcedBeans.add(beanName);
 			}
+			// 获取能够应用当前bean的切面逻辑
 			Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+			// 根据切面逻辑为当前bean生成代理对象
 			Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;
@@ -291,11 +308,15 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * identified as one to proxy by the subclass.
 	 * @see #getAdvicesAndAdvisorsForBean
 	 */
+	// 这个方法是在bean实例化之后调用的，它是适用于所有需要被代理的类的
+	// 事务流程：aop走这个，事务也是走这个
 	@Override
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
 		if (bean != null) {
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
+			// earlyProxyReferences循环引用中是否已经执行过了，循环引用中执行过会把它放到earlyProxyReferences
 			if (this.earlyProxyReferences.remove(cacheKey) != bean) {
+				// 包装bean 真正的创建代理对象逻辑
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
 		}
@@ -325,28 +346,40 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 
 	/**
-	 * Wrap the given bean if necessary, i.e. if it is eligible for being proxied.
+	 * Wrap(包裹) the given bean if necessary, i.e. if it is eligible for being proxied.
 	 * @param bean the raw bean instance
 	 * @param beanName the name of the bean
 	 * @param cacheKey the cache key for metadata access
 	 * @return a proxy wrapping the bean, or the raw bean instance as-is
 	 */
+	// 注意这个方法的调用只有两处，spring aop返回代理对象
 	protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+		//如果已经处理过
 		if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
 			return bean;
 		}
+		//如果当前类是增强类
 		if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
 			return bean;
 		}
+		//查看类是否是基础设施类，或者是否被排除
 		if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
 			this.advisedBeans.put(cacheKey, Boolean.FALSE);
 			return bean;
 		}
 
 		// Create proxy if we have advice.
+		// 校验此类是否应该被代理，获取这个类的增强
+		// 返回匹配当前 bean 的所有的 advisor、advice、interceptor
+
+		// Advices aop通知 | Advisors 这是事务相关
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
+		//如果获取到了增强则需要针对增强创建代理
 		if (specificInterceptors != DO_NOT_PROXY) {
+			// 保存当前bean在advisedBeans中：表示当前bean已经增强了
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
+			// 创建代理!!!!!!!!!!!!!!!!!!!!!!!!!并且返回代理对象，然后用户拿到了就是代理对象了
+			// 现在所有的bean对应的增强都已经获取到了，那么就可以根据类的所有增强数组创建代理
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			this.proxyTypes.put(cacheKey, proxy.getClass());
@@ -368,6 +401,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @see org.springframework.aop.Advisor
 	 * @see org.springframework.aop.framework.AopInfrastructureBean
 	 * @see #shouldSkip
+	 * 是基础的class
 	 */
 	protected boolean isInfrastructureClass(Class<?> beanClass) {
 		boolean retVal = Advice.class.isAssignableFrom(beanClass) ||
@@ -439,6 +473,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @return the AOP proxy for the bean
 	 * @see #buildAdvisors
 	 */
+	// 注意看这个方法的几个参数，
+	//   第三个参数携带了所有的 advisors
+	//   第四个参数 targetSource 携带了真实实现的信息
 	protected Object createProxy(Class<?> beanClass, @Nullable String beanName,
 			@Nullable Object[] specificInterceptors, TargetSource targetSource) {
 
@@ -449,25 +486,39 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		ProxyFactory proxyFactory = new ProxyFactory();
 		proxyFactory.copyFrom(this);
 
+		// 在 schema-based 的配置方式中，我们介绍过，如果希望使用 CGLIB 来代理接口，可以配置
+		// proxy-target-class="true",这样不管有没有接口，都使用 CGLIB 来生成代理：
+		//   <aop:config proxy-target-class="true">......</aop:config>
+		//判断是否使用Cglib动态代理
 		if (!proxyFactory.isProxyTargetClass()) {
+			//如果配置开启使用则直接设置开启
 			if (shouldProxyTargetClass(beanClass, beanName)) {
 				proxyFactory.setProxyTargetClass(true);
 			}
 			else {
+				//如果没有配置开启则判断bean是否有合适的接口使用JDK的动态代理（JDK动态代理必须是带有接口的类，
+				// 如果类没有实现任何接口则只能使用Cglib动态代理）
+				//关于代理的基础知识可以参考我的另一篇文章：https://mp.weixin.qq.com/s/1DRmvuky5_NMRcH-toTLqQ
 				evaluateProxyInterfaces(beanClass, proxyFactory);
 			}
 		}
 
+		//添加所有增强
+		// 这个方法会返回匹配了当前 bean 的 advisors 数组
+		// 注意：如果 specificInterceptors 中有 advice 和 interceptor，它们也会被包装成 advisor，进去看下源码就清楚了
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		proxyFactory.addAdvisors(advisors);
+		//设置要代理的类
 		proxyFactory.setTargetSource(targetSource);
-		customizeProxyFactory(proxyFactory);
+		//Spring的一个扩展点，默认实现为空。留给我们在需要对代理进行特殊操作的时候实现
+		customizeProxyFactory(proxyFactory); // 定制 customize
 
 		proxyFactory.setFrozen(this.freezeProxy);
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
 
+		//使用代理工厂获取代理对象
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 
@@ -583,7 +634,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @see #DO_NOT_PROXY
 	 * @see #PROXY_WITHOUT_ADDITIONAL_INTERCEPTORS
 	 */
-	@Nullable
+	@Nullable // aop: AbstractAdvisorAutoProxyCreator
 	protected abstract Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName,
 			@Nullable TargetSource customTargetSource) throws BeansException;
 

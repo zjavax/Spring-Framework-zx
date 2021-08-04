@@ -434,6 +434,7 @@ public class BeanDefinitionParserDelegate {
 			checkNameUniqueness(beanName, aliases, ele);
 		}
 
+		// 接着是最重要的地方，如何根据配置创建 BeanDefinition 实例
 		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);
 		if (beanDefinition != null) {
 			if (!StringUtils.hasText(beanName)) {
@@ -512,11 +513,17 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		try {
+			// 创建 BeanDefinition，然后设置类信息
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
 
+			// 设置 BeanDefinition 的一堆属性，这些属性定义在 AbstractBeanDefinition 中
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
+			/**
+			 * 下面的一堆是解析 <bean>......</bean> 内部的子元素，
+			 * 解析出来以后的信息都放到 bd 的属性中
+			 */
 			parseMetaElements(ele, bd);
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());

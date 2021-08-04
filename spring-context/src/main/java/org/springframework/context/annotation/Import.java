@@ -49,7 +49,7 @@ import java.lang.annotation.Target;
  * @see ImportSelector
  * @see ImportResource
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.TYPE) //  @Import只允许放到类上面，不能放到方法上。
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Import {
@@ -58,6 +58,8 @@ public @interface Import {
 	 * {@link Configuration @Configuration}, {@link ImportSelector},
 	 * {@link ImportBeanDefinitionRegistrar}, or regular component classes to import.
 	 */
+	// 从源码里可以看出@Import可以配合 Configuration ,ImportSelector, ImportBeanDefinitionRegistrar 来使用，
+	// 下面的or表示也可以把Import当成普通的Bean使用
 	Class<?>[] value();
 
 }

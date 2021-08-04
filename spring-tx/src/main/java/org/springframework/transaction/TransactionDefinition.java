@@ -51,7 +51,7 @@ public interface TransactionDefinition {
 	 * <p>This is typically the default setting of a transaction definition,
 	 * and typically defines a transaction synchronization scope.
 	 */
-	int PROPAGATION_REQUIRED = 0;
+	int PROPAGATION_REQUIRED = 0; // 传播行为默认值
 
 	/**
 	 * Support a current transaction; execute non-transactionally if none exists.
@@ -71,6 +71,8 @@ public interface TransactionDefinition {
 	 * "synchronization on actual transaction").
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setTransactionSynchronization
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#SYNCHRONIZATION_ON_ACTUAL_TRANSACTION
+	 *
+	 *  如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行
 	 */
 	int PROPAGATION_SUPPORTS = 1;
 
@@ -79,6 +81,7 @@ public interface TransactionDefinition {
 	 * exists. Analogous to the EJB transaction attribute of the same name.
 	 * <p>Note that transaction synchronization within a {@code PROPAGATION_MANDATORY}
 	 * scope will always be driven by the surrounding transaction.
+	 * mandatory 强制的 支持当前事务，如果当前没有事务，则抛出异常
 	 */
 	int PROPAGATION_MANDATORY = 2;
 
@@ -139,7 +142,7 @@ public interface TransactionDefinition {
 	 * All other levels correspond to the JDBC isolation levels.
 	 * @see java.sql.Connection
 	 */
-	int ISOLATION_DEFAULT = -1;
+	int ISOLATION_DEFAULT = -1;  // mysql innodb 默认隔离级别：可重复读(Repeated Read)
 
 	/**
 	 * Indicates that dirty reads, non-repeatable reads and phantom reads
@@ -182,6 +185,7 @@ public interface TransactionDefinition {
 	 * re-reads for the same condition, retrieving the additional "phantom" row
 	 * in the second read.
 	 * @see java.sql.Connection#TRANSACTION_SERIALIZABLE
+	 * serializable 可串行化；可序列化
 	 */
 	int ISOLATION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE;
 
@@ -200,6 +204,9 @@ public interface TransactionDefinition {
 	 * @return the propagation behavior
 	 * @see #PROPAGATION_REQUIRED
 	 * @see org.springframework.transaction.support.TransactionSynchronizationManager#isActualTransactionActive()
+	 *
+	 * Propagation Behavior
+	 * 获取事务的传播行为
 	 */
 	int getPropagationBehavior();
 

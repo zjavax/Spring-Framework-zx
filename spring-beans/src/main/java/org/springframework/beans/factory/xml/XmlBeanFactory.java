@@ -18,8 +18,11 @@ package org.springframework.beans.factory.xml;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.io.Resource;
+
+import java.util.Map;
 
 /**
  * Convenience extension of {@link DefaultListableBeanFactory} that reads bean definitions
@@ -79,4 +82,8 @@ public class XmlBeanFactory extends DefaultListableBeanFactory {
 		this.reader.loadBeanDefinitions(resource);
 	}
 
+    @Override
+    protected Map<String, Object> findAutowireCandidates(String beanName, Class<?> requiredType, DependencyDescriptor descriptor) {
+        return super.findAutowireCandidates(beanName, requiredType, descriptor);
+    }
 }

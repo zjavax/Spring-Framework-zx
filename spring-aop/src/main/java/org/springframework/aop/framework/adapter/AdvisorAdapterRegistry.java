@@ -62,6 +62,8 @@ public interface AdvisorAdapterRegistry {
 	 * adapters for an AOP Alliance Interceptors or Spring Advices: these must be
 	 * automatically recognized by an {@code AdvisorAdapterRegistry} implementation.
 	 * @param adapter an AdvisorAdapter that understands particular Advisor or Advice types
+	 *
+	 * 注册AdvisorAdapter，AdvisorAdapter可以将Advisor中的Advice适配为MethodInterceptor
 	 */
 	void registerAdvisorAdapter(AdvisorAdapter adapter);
 

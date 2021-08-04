@@ -78,9 +78,12 @@ public abstract class TransactionSynchronizationManager {
 
 	private static final Log logger = LogFactory.getLog(TransactionSynchronizationManager.class);
 
+	// 存储事务资源信息
+	// datasource->ConnectionHoloder(conn)被放到resources Threadloca的map中了。
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<>("Transactional resources");
 
+	// 存储事务过程中的一些回调接口(TransactionSynchronization接口，这个可以在事务的过程中给开发者提供一些回调用的)
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<>("Transaction synchronizations");
 
@@ -183,6 +186,7 @@ public abstract class TransactionSynchronizationManager {
 			map = new HashMap<>();
 			resources.set(map);
 		}
+		// datasource->ConnectionHoloder(conn)被放到resources Threadloca的map中了。
 		Object oldValue = map.put(actualKey, value);
 		// Transparently suppress a ResourceHolder that was marked as void...
 		if (oldValue instanceof ResourceHolder && ((ResourceHolder) oldValue).isVoid()) {

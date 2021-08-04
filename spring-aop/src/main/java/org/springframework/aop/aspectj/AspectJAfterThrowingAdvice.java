@@ -32,7 +32,7 @@ import org.springframework.aop.AfterAdvice;
  */
 @SuppressWarnings("serial")
 public class AspectJAfterThrowingAdvice extends AbstractAspectJAdvice
-		implements MethodInterceptor, AfterAdvice, Serializable {
+		implements MethodInterceptor, AfterAdvice, Serializable { // 此处很奇怪，为什么是AfterAdvice？
 
 	public AspectJAfterThrowingAdvice(
 			Method aspectJBeforeAdviceMethod, AspectJExpressionPointcut pointcut, AspectInstanceFactory aif) {

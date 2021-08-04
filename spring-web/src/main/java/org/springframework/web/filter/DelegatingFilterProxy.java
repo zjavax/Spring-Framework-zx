@@ -250,17 +250,19 @@ public class DelegatingFilterProxy extends GenericFilterBean {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		// Lazily initialize the delegate if necessary.
+		// Lazily initialize the delegate委托 if necessary.
 		Filter delegateToUse = this.delegate;
 		if (delegateToUse == null) {
 			synchronized (this.delegateMonitor) {
 				delegateToUse = this.delegate;
 				if (delegateToUse == null) {
+					// 获取服务端过滤器
 					WebApplicationContext wac = findWebApplicationContext();
 					if (wac == null) {
 						throw new IllegalStateException("No WebApplicationContext found: " +
 								"no ContextLoaderListener or DispatcherServlet registered?");
 					}
+					// 执行服务端重写的过滤器
 					delegateToUse = initDelegate(wac);
 				}
 				this.delegate = delegateToUse;

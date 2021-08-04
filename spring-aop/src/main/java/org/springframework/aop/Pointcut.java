@@ -47,6 +47,8 @@ public interface Pointcut {
 
 	/**
 	 * Canonical Pointcut instance that always matches.
+	 *
+	 * 匹配所有对象的 Pointcut，内部的2个过滤器默认都会返回true
 	 */
 	Pointcut TRUE = TruePointcut.INSTANCE;
 

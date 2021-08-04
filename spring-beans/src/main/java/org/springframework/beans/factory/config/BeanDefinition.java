@@ -40,6 +40,7 @@ import org.springframework.lang.Nullable;
 public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
 	/**
+	 * Scope 作用域
 	 * Scope identifier for the standard singleton scope: "singleton".
 	 * <p>Note that extended bean factories might support further scopes.
 	 * @see #setScope
@@ -148,6 +149,8 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	/**
 	 * Set the names of the beans that this bean depends on being initialized.
 	 * The bean factory will guarantee that these beans get initialized first.
+	 * 设置该bean依赖于初始化的bean的名称。
+	 * Bean工厂将确保首先初始化这些Bean。
 	 */
 	void setDependsOn(@Nullable String... dependsOn);
 
@@ -173,6 +176,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
 	/**
 	 * Set whether this bean is a primary autowire candidate.
+	 * 设置此bean是否为自动装配的主要候选对象。
 	 * <p>If this value is {@code true} for exactly one bean among multiple
 	 * matching candidates, it will serve as a tie-breaker.
 	 */

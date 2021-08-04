@@ -38,6 +38,11 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyTransactionManagementConfiguration extends AbstractTransactionManagementConfiguration {
 
+	/**
+	 * 为我我们容器中导入了 beanName为org.springframework.transaction.config.internalTransactionAdvisor
+	 * 类型为:BeanFactoryTransactionAttributeSourceAdvisor 的增强器，而aop应该是自己去找的：postProcessBeforeInstantiation
+	 * AttributeSource 属性源    Advisor 增强器
+	 * */
 	@Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor() {
@@ -50,6 +55,9 @@ public class ProxyTransactionManagementConfiguration extends AbstractTransaction
 		return advisor;
 	}
 
+	// TransactionAttributeSource接口有个实现类AnnotationTransactionAttributeSource，
+	// 这个里面又有一个SpringTransactionAnnotationParser
+	// 负责将@Transaction解析为TransactionAttribute对象
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionAttributeSource transactionAttributeSource() {

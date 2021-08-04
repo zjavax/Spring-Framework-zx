@@ -51,6 +51,9 @@ public interface MethodInterceptor extends Interceptor {
 	 * might be intercepted by the interceptor
 	 * @throws Throwable if the interceptors or the target object
 	 * throws an exception
+	 *
+	 * ExposeInvocationInterceptor
+	 * TransactionInterceptor
 	 */
 	Object invoke(MethodInvocation invocation) throws Throwable;
 

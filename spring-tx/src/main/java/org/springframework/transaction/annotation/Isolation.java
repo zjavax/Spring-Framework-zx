@@ -34,7 +34,7 @@ public enum Isolation {
 	 * All other levels correspond to the JDBC isolation levels.
 	 * @see java.sql.Connection
 	 */
-	DEFAULT(TransactionDefinition.ISOLATION_DEFAULT),
+	 DEFAULT(TransactionDefinition.ISOLATION_DEFAULT),
 
 	/**
 	 * A constant indicating that dirty reads, non-repeatable reads and phantom reads

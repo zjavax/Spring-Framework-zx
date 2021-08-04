@@ -87,6 +87,11 @@ public class InjectionMetadata {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Processing injected element of bean '" + beanName + "': " + element);
 				}
+				// AutowiredAnnotationBeanPostProcessor.inject
+
+				//解析@Autowired注解生成的元数据类有AutowiredFieldElement，AutowiredMethodElement
+				//这两个类继承InjectionMetadata .InjectedElement，各自实现了inject方法。
+				//这两个类是AutowiredAnnotationBeanPostProcessor的私有内部类
 				element.inject(target, beanName, pvs);
 			}
 		}

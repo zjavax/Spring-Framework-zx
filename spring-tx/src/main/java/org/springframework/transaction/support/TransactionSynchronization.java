@@ -51,6 +51,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * Suspend this synchronization.
 	 * Supposed to unbind resources from TransactionSynchronizationManager if managing any.
 	 * @see TransactionSynchronizationManager#unbindResource
+	 *
+	 * //事务被挂起的时候会调用被挂起事务中所有TransactionSynchronization的 suspend 方法
 	 */
 	default void suspend() {
 	}
@@ -59,6 +61,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * Resume this synchronization.
 	 * Supposed to rebind resources to TransactionSynchronizationManager if managing any.
 	 * @see TransactionSynchronizationManager#bindResource
+	 *
+	 * //事务恢复的过程中会调用被恢复的事务中所有TransactionSynchronization的resume方法
 	 */
 	default void resume() {
 	}
@@ -73,7 +77,7 @@ public interface TransactionSynchronization extends Flushable {
 	}
 
 	/**
-	 * Invoked before transaction commit (before "beforeCompletion").
+	 * Invoked before transaction commit (before "beforeCompletion").  事务提交之前调用
 	 * Can e.g. flush transactional O/R Mapping sessions to the database.
 	 * <p>This callback does <i>not</i> mean that the transaction will actually be committed.
 	 * A rollback decision can still occur after this method has been called. This callback
@@ -122,7 +126,7 @@ public interface TransactionSynchronization extends Flushable {
 	}
 
 	/**
-	 * Invoked after transaction commit/rollback.
+	 * Invoked after transaction commit/rollback.  事务提交回滚后调用。
 	 * Can perform resource cleanup <i>after</i> transaction completion.
 	 * <p><b>NOTE:</b> The transaction will have been committed or rolled back already,
 	 * but the transactional resources might still be active and accessible. As a

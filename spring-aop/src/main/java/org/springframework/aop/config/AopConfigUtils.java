@@ -73,6 +73,8 @@ public abstract class AopConfigUtils {
 	public static BeanDefinition registerAutoProxyCreatorIfNecessary(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 
+		// InfrastructureAdvisorAutoProxyCreator 后置处理器
+		// Infrastructure基础设施 Advisor 顾问/增强器
 		return registerOrEscalateApcAsRequired(InfrastructureAdvisorAutoProxyCreator.class, registry, source);
 	}
 
@@ -97,6 +99,7 @@ public abstract class AopConfigUtils {
 	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 
+		// 注册一个bean：AnnotationAwareAspectJAutoProxyCreator到容器中，此类负责基于注解的AOP动态代理实现
 		return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
 	}
 
@@ -122,6 +125,7 @@ public abstract class AopConfigUtils {
 
 		if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
 			BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+			// 判断优先级，如果优先级较高则替换原先的bean
 			if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
 				int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());
 				int requiredPriority = findPriorityForClass(cls);
@@ -132,6 +136,7 @@ public abstract class AopConfigUtils {
 			return null;
 		}
 
+		// 注册一个bean：AnnotationAwareAspectJAutoProxyCreator到容器中，此类负责基于注解的AOP动态代理实现
 		RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
 		beanDefinition.setSource(source);
 		beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);

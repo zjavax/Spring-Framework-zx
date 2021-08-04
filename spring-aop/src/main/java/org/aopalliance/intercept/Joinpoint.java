@@ -45,6 +45,8 @@ public interface Joinpoint {
 	 * on the actual joinpoint type (see the children interfaces).
 	 * @return see the children interfaces' proceed definition
 	 * @throws Throwable if the joinpoint throws an exception
+	 *
+	 * 转到拦截器链中的下一个拦截器
 	 */
 	Object proceed() throws Throwable;
 

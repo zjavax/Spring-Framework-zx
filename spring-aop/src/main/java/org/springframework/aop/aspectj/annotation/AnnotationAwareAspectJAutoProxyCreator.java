@@ -52,6 +52,21 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	@Nullable
 	private List<Pattern> includePatterns;
 
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName) {
+		return super.postProcessBeforeInitialization(bean, beanName);
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName) {
+		return super.postProcessAfterInitialization(bean, beanName);
+	}
+
+	@Override
+	public boolean postProcessAfterInstantiation(Object bean, String beanName) {
+		return super.postProcessAfterInstantiation(bean, beanName);
+	}
+
 	@Nullable
 	private AspectJAdvisorFactory aspectJAdvisorFactory;
 
@@ -75,6 +90,9 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 		this.aspectJAdvisorFactory = aspectJAdvisorFactory;
 	}
 
+//	总结：AnnotationAwareAspectJAutoProxyCreator 实现了BeanFactoryAware 也是做了二个事情
+//	事情1:把Beanfactory 保存到AnnotationAwareAspectJAutoProxyCreator 组件上.
+//	事情2: 为aspectJAdvisorsBuilder赋值：为AnnotationAwareAspectJAutoProxyCreator 的aspectJAdvisorsBuilder aspect增强器构建器赋值
 	@Override
 	protected void initBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		super.initBeanFactory(beanFactory);
@@ -89,9 +107,14 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	@Override
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
+		// 添加根据超类规则找到的所有Spring advisors。
+		// 上方这个获取增强又分成了2部分，获取全部和根据全部处理bean相关的
+
+		// 此处findCandidateAdvisors 找事务的候选增强器
 		List<Advisor> advisors = super.findCandidateAdvisors();
 		// Build Advisors for all AspectJ aspects in the bean factory.
 		if (this.aspectJAdvisorsBuilder != null) {
+			// 找aop的通知候选增强器 往下看
 			advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 		}
 		return advisors;

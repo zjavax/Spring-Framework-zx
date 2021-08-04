@@ -82,6 +82,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	/**
 	 * List of MethodInterceptor and InterceptorAndDynamicMethodMatcher
 	 * that need dynamic checks.
+	 * 即方法调用链列表
 	 */
 	protected final List<?> interceptorsAndDynamicMethodMatchers;
 
@@ -104,6 +105,8 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * MethodMatchers included in this struct must already have been found to have matched
 	 * as far as was possibly statically. Passing an array might be about 10% faster,
 	 * but would complicate the code. And it would work only for static pointcuts.
+	 *
+	 * Reflective 反射
 	 */
 	protected ReflectiveMethodInvocation(
 			Object proxy, @Nullable Object target, Method method, @Nullable Object[] arguments,
@@ -155,14 +158,19 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 
+	//这里是重点，用来处理被调用的方法，会递归进行调用，所有的拦截器都执行完毕之后，会通过反射调用目标方法
 	@Override
 	@Nullable
 	public Object proceed() throws Throwable {
 		// We start with an index of -1 and increment early.
+		//  执行完所有的增强后执行切点方法
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+			// invoke 调用 Joinpoint 连接点，spring中目标对象的方法
+			// 调用目标对象的方法
 			return invokeJoinpoint();
 		}
 
+		//获取下一个要执行的拦截器
 		Object interceptorOrInterceptionAdvice =
 				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
@@ -183,6 +191,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 		else {
 			// It's an interceptor, so we just invoke it: The pointcut will have
 			// been evaluated statically before this object was constructed.
+			// ExposeInvocationInterceptor 第一个
 			return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
 		}
 	}

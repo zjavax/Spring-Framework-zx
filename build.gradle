@@ -1,5 +1,11 @@
 buildscript {
 	repositories {
+	    // maven { url 'file:///C:/Java/maven_repository'}
+	    maven { url 'file:///C:/Users/zhangxiang/.m2/repository'}
+		mavenLocal()
+		maven { url 'file:///C:/Users/zhangxiang/.gradle/caches/modules-2/files-2.1'}
+	    maven { url "https://maven.aliyun.com/repository/spring-plugin"}
+		mavenCentral()
 		gradlePluginPortal()
 		maven { url "https://repo.spring.io/plugins-release" }
 	}
@@ -148,6 +154,10 @@ configure(allprojects) { project ->
 	}
 
 	repositories {
+	    maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+		maven { url "http://maven.aliyun.com/nexus/content/repositories/jcenter"}
+		maven { url "https://maven.aliyun.com/nexus/content/groups/public/"}
+		maven { url "https://maven.aliyun.com/nexus/content/repositories/jcenter"}
 		mavenCentral()
 		maven { url "https://repo.spring.io/libs-spring-framework-build" }
 	}
@@ -244,8 +254,8 @@ configure(subprojects - project(":spring-build-src")) { subproject ->
 	}
 
 	artifacts {
-		archives sourcesJar
-		archives javadocJar
+		// archives sourcesJar
+		// archives javadocJar
 	}
 }
 
@@ -254,7 +264,7 @@ configure(rootProject) {
 
 	apply plugin: "groovy"
 	apply from: "${gradleScriptDir}/jdiff.gradle"
-	apply from: "${gradleScriptDir}/docs.gradle"
+	// apply from: "${gradleScriptDir}/docs.gradle"
 
 	dependencyManagement {
 		imports {
@@ -285,9 +295,9 @@ configure(rootProject) {
 	}
 
 	artifacts {
-		archives docsZip
-		archives schemaZip
-		archives distZip
+		// archives docsZip
+		// archives schemaZip
+		// archives distZip
 	}
 
 	wrapper {

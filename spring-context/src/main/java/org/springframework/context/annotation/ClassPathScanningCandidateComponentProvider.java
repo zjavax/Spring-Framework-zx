@@ -203,10 +203,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	@SuppressWarnings("unchecked")
 	protected void registerDefaultFilters() {
+		// @Compent  @Service @Repository @Controller @Aspectj
 		this.includeFilters.add(new AnnotationTypeFilter(Component.class));
 		ClassLoader cl = ClassPathScanningCandidateComponentProvider.class.getClassLoader();
 		try {
-			this.includeFilters.add(new AnnotationTypeFilter(
+			this.includeFilters.add(new AnnotationTypeFilter( // ManagedBean
 					((Class<? extends Annotation>) ClassUtils.forName("javax.annotation.ManagedBean", cl)), false));
 			logger.trace("JSR-250 'javax.annotation.ManagedBean' found and supported for component scanning");
 		}
@@ -307,11 +308,14 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 * @param basePackage the package to check for annotated classes
 	 * @return a corresponding Set of autodetected bean definitions
 	 */
+	// Candidate 候选人
 	public Set<BeanDefinition> findCandidateComponents(String basePackage) {
+		// 判断是否使用Filter指定忽略包不扫描
 		if (this.componentsIndex != null && indexSupportsIncludeFilters()) {
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		}
 		else {
+			// //扫描包
 			return scanCandidateComponents(basePackage);
 		}
 	}
@@ -415,8 +419,10 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	private Set<BeanDefinition> scanCandidateComponents(String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
+			// 组装扫描路径（组装完成后是这种格式：classpath*:cn/shiyujun/config/**/*.class）
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
+			// 根据路径获取资源对象
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
@@ -426,8 +432,12 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 				}
 				if (resource.isReadable()) {
 					try {
+						//根据资源对象通过反射获取资源对象的MetadataReader，具体就不展开说了
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
+						// 查看配置类是否有@Conditional一系列的注解，然后是否满足注册Bean的条件，
+						// 关于这个知识点可以参考我之前的文章：https://mp.weixin.qq.com/s/RXYIh_g5iU1e3liK-8n5zA
 						if (isCandidateComponent(metadataReader)) {
+							// ScannedGenericBeanDefinition(bd)  AbstractBeanDefinition
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 							sbd.setSource(resource);
 							if (isCandidateComponent(sbd)) {

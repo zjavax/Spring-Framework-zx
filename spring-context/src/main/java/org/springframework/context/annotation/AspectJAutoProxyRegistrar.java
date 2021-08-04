@@ -42,6 +42,10 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 	public void registerBeanDefinitions(
 			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
+		// 注册一个AOP代理实现的Bean，往下看
+		// registerAspectJAnnotationAutoProxyCreatorIfNecessary
+		// 方法的主要功能是注册或者升级AnnotationAwareAspectJAutoProxyCreator类
+		// 这个类在AOP中非常的重要，它的主要功能就是根据@Point注解定义的切点来自动代理与表达式匹配的类。
 		AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
 
 		AnnotationAttributes enableAspectJAutoProxy =

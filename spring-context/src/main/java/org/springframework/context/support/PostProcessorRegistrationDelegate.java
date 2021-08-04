@@ -58,15 +58,26 @@ final class PostProcessorRegistrationDelegate {
 		// Invoke BeanDefinitionRegistryPostProcessors first, if any.
 		Set<String> processedBeans = new HashSet<>();
 
+		// 1.判断beanFactory是否为BeanDefinitionRegistry，在这里普通的beanFactory是DefaultListableBeanFactory,
+		// 而DefaultListableBeanFactory实现了BeanDefinitionRegistry接口，因此这边为true
 		if (beanFactory instanceof BeanDefinitionRegistry) {
 			BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+			// 创建一个普通的PostProcessors的list的组件
 			List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
 
+			// beanFactoryPostProcessor BeanDefinitionRegistryPostProcessor
+			// 2.处理入参beanFactoryPostProcessors
+			// 自己拿到ac,自己添加的bean工厂后置处理器
+			// ac.addBeanFactoryPostProcessor(new TulingBeanFactoryPostProcessor());
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
 					BeanDefinitionRegistryPostProcessor registryProcessor =
 							(BeanDefinitionRegistryPostProcessor) postProcessor;
+					// 如果是BeanDefinitionRegistryPostProcessor则直接执行BeanDefinitionRegistryPostProcessor
+					// 接口的postProcessBeanDefinitionRegistry方法
+					registryProcessor.postProcessBeanDefinitionRegistry(registry);
+					registryProcessor.postProcessBeanDefinitionRegistry(registry);
 					registryProcessor.postProcessBeanDefinitionRegistry(registry);
 					registryProcessors.add(registryProcessor);
 				}
@@ -79,19 +90,41 @@ final class PostProcessorRegistrationDelegate {
 			// uninitialized to let the bean factory post-processors apply to them!
 			// Separate between BeanDefinitionRegistryPostProcessors that implement
 			// PriorityOrdered, Ordered, and the rest.
+			// BeanDefinitionRegistryPostProcessor： spring内部自己的beanFactoryPostProcessor
+			//这个currentRegistryProcessors 放的是spring内部自己实现了BeanDefinitionRegistryPostProcessor接口的对象
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 
+			// 这个地方可以得到一个BeanFactoryPostProcessor，是spring一开始注册的，用来插手spring工厂的实例化
+			// 因为spring的工厂需要去解析去扫描
+			// 而这些功能都需要spring工厂在初始化完成之前执行
+			//
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
+			// 取出只有一个：ConfigurationClassPostProcessor
+			// 3 找出所有实现BeanDefinitionRegistryPostProcessor接口的Bean的beanName
+			//BeanDefinitionRegistryPostProcessor 等于 BeanFactoryPostProcessor
+			//getBeanNamesForType  根据bean的类型获取bean的名字ConfigurationClassPostProcessor
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+			//这个地方可以得到一个BeanFactoryPostProcessor，因为是spring默认在最开始自己注册的
+			//为什么要在最开始注册这个呢？
+			//因为spring的工厂需要许解析去扫描等等功能
+			//而这些功能都是需要在spring工厂初始化完成之前执行
+			//要么在工厂最开始的时候、要么在工厂初始化之中，反正不能再之后
+			//因为如果在之后就没有意义，因为那个时候已经需要使用工厂了
+			//所以这里spring'在一开始就注册了一个BeanFactoryPostProcessor，用来插手springfactory的实例化过程
+			//在这个地方断点可以知道这个类叫做ConfigurationClassPostProcessor
+			//ConfigurationClassPostProcessor那么这个类能干嘛呢？可以参考源码
+			//下面我们对这个牛逼哄哄的类（他能插手spring工厂的实例化过程还不牛逼吗？）重点解释
 			for (String ppName : postProcessorNames) {
-				if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+				if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) { // PriorityOrdered 优先顺序
 					currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 					processedBeans.add(ppName);
 				}
 			}
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
 			registryProcessors.addAll(currentRegistryProcessors);
+			//最重要。注意这里是方法调用
+			//执行所有BeanDefinitionRegistryPostProcessor
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
 			currentRegistryProcessors.clear();
 
@@ -127,7 +160,11 @@ final class PostProcessorRegistrationDelegate {
 			}
 
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+			// 现在，调用到目前为止已处理的所有处理器的postProcessBeanFactory回调。
+			// 现在，执行BeanFactoryPostProcessor的回调
+			// org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanFactory
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
+			// 自定义的BeanFactoryPostProcessor
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 		}
 
@@ -187,7 +224,7 @@ final class PostProcessorRegistrationDelegate {
 
 	public static void registerBeanPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
-
+		// 从bdMap根据类型 获取所有BeanPostProcessor的实现类的name
 		String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 
 		// Register BeanPostProcessorChecker that logs an info message when
@@ -196,8 +233,8 @@ final class PostProcessorRegistrationDelegate {
 		int beanProcessorTargetCount = beanFactory.getBeanPostProcessorCount() + 1 + postProcessorNames.length;
 		beanFactory.addBeanPostProcessor(new BeanPostProcessorChecker(beanFactory, beanProcessorTargetCount));
 
-		// Separate between BeanPostProcessors that implement PriorityOrdered,
-		// Ordered, and the rest.
+		// Separate(分开) between BeanPostProcessors that implement PriorityOrdered,
+		// Ordered, and the rest（其余的部分）.
 		List<BeanPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
 		List<BeanPostProcessor> internalPostProcessors = new ArrayList<>();
 		List<String> orderedPostProcessorNames = new ArrayList<>();
@@ -234,7 +271,7 @@ final class PostProcessorRegistrationDelegate {
 		sortPostProcessors(orderedPostProcessors, beanFactory);
 		registerBeanPostProcessors(beanFactory, orderedPostProcessors);
 
-		// Now, register all regular BeanPostProcessors.
+		// Now, register all regular（常规的） BeanPostProcessors.
 		List<BeanPostProcessor> nonOrderedPostProcessors = new ArrayList<>();
 		for (String ppName : nonOrderedPostProcessorNames) {
 			BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -245,12 +282,14 @@ final class PostProcessorRegistrationDelegate {
 		}
 		registerBeanPostProcessors(beanFactory, nonOrderedPostProcessors);
 
-		// Finally, re-register all internal BeanPostProcessors.
+		// Finally, re-register all internal BeanPostProcessors. 最后，重新注册所有内部BeanPostProcessor。
 		sortPostProcessors(internalPostProcessors, beanFactory);
 		registerBeanPostProcessors(beanFactory, internalPostProcessors);
 
 		// Re-register post-processor for detecting inner beans as ApplicationListeners,
 		// moving it to the end of the processor chain (for picking up proxies etc).
+		// 将其移动到处理器链的末尾（用于拾取代理等）。
+		// Detector 探测器
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(applicationContext));
 	}
 
@@ -303,6 +342,10 @@ final class PostProcessorRegistrationDelegate {
 	 * BeanPostProcessor that logs an info message when a bean is created during
 	 * BeanPostProcessor instantiation, i.e. when a bean is not eligible for
 	 * getting processed by all BeanPostProcessors.
+	 * 翻译：当在BeanPostProcessor实例化期间创建Bean时，即当某个Bean不适合所有BeanPostProcessor处理时，
+	 * 将记录一条信息消息的BeanPostProcessor。
+	 * 当spring的配置中的后置处理器还没有被注册就已经开始了bean的初始化，
+	 * 便会打印BeanPostProcessorChecker中的一条消息
 	 */
 	private static final class BeanPostProcessorChecker implements BeanPostProcessor {
 

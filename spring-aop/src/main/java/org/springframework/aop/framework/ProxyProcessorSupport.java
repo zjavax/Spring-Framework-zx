@@ -101,6 +101,8 @@ public class ProxyProcessorSupport extends ProxyConfig implements Ordered, BeanC
 	 * @param beanClass the class of the bean
 	 * @param proxyFactory the ProxyFactory for the bean
 	 */
+	// 1. 有接口的，调用一次或多次：proxyFactory.addInterface(ifc);
+	// 2. 没有接口的，调用：proxyFactory.setProxyTargetClass(true);
 	protected void evaluateProxyInterfaces(Class<?> beanClass, ProxyFactory proxyFactory) {
 		Class<?>[] targetInterfaces = ClassUtils.getAllInterfacesForClass(beanClass, getProxyClassLoader());
 		boolean hasReasonableProxyInterface = false;

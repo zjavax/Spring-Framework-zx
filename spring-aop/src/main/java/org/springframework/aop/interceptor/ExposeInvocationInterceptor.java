@@ -85,11 +85,13 @@ public final class ExposeInvocationInterceptor implements MethodInterceptor, Pri
 	private ExposeInvocationInterceptor() {
 	}
 
-	@Override
+	@Override  // invoke 主动调用目标方法 proceed 转到拦截器链的下一个拦截器
 	public Object invoke(MethodInvocation mi) throws Throwable {
 		MethodInvocation oldInvocation = invocation.get();
+		// 设置到ThreadLocal
 		invocation.set(mi);
 		try {
+			// this 也就是 MethodInvocation mi 也就是 ReflectiveMethodInvocation
 			return mi.proceed();
 		}
 		finally {

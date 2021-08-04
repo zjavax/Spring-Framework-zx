@@ -43,9 +43,8 @@ public class BeanDefinitionHolder implements BeanMetadataElement {
 
 	private final String beanName;
 
-	@Nullable
+	@Nullable // 别名
 	private final String[] aliases;
-
 
 	/**
 	 * Create a new BeanDefinitionHolder.

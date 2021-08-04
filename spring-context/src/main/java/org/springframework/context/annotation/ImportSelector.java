@@ -52,6 +52,7 @@ public interface ImportSelector {
 	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
 	 * @return the class names, or an empty array if none
 	 */
+	// org.springframework.context.annotation.ConfigurationClassParser.processImports
 	String[] selectImports(AnnotationMetadata importingClassMetadata);
 
 }

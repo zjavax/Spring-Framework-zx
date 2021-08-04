@@ -163,6 +163,10 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		this.registry = registry;
 
 		if (useDefaultFilters) {
+			// 注册默认的过滤器，一般情况下会注册两个默认过滤器
+			// 1、Component Filter
+			// 2、ManagedBean Filter
+			// 如果使用了 JSR-330 'javax.inject.Named' ，则会再注册一个 Named Filter
 			registerDefaultFilters();
 		}
 		setEnvironment(environment);
@@ -268,23 +272,34 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 * @param basePackages the packages to check for annotated classes
 	 * @return set of beans registered if any for tooling registration purposes (never {@code null})
 	 */
+	// 1、根据包路径通过@Component拿到这个BeanDefinition(AnnotationMetadata， BeanClass)
+	// 2、包装在definitionHolder，然后registerBeanDefinition（DefaultListableBeanFactory）
+	// 3、然后存放到容器里beanDefinitionMap（并没有放入bean的实例） beanDefinitionNames，
 	protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
+			// 获取所有符合条件的BeanDefinition 看这个： findCandidateComponents
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 			for (BeanDefinition candidate : candidates) {
+				// 绑定BeanDefinition与Scope
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
+				// 查看是否配置类是否指定bean的名称，如没指定则使用类名首字母小写
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
+				//下面两个if是处理lazy、Autowire、DependencyOn、initMethod、enforceInitMethod、destroyMethod、
+				// enforceDestroyMethod、Primary、Role、Description这些逻辑的
 				if (candidate instanceof AbstractBeanDefinition) {
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}
 				if (candidate instanceof AnnotatedBeanDefinition) {
 					AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
 				}
+				// 检查bean是否存在
 				if (checkCandidate(beanName, candidate)) {
+					// 又包装了一层
 					BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(candidate, beanName);
+					// 检查scope是否创建，如未创建则进行创建
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);

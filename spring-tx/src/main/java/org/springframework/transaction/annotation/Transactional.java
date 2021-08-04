@@ -83,6 +83,7 @@ public @interface Transactional {
 	 * The transaction propagation type.
 	 * <p>Defaults to {@link Propagation#REQUIRED}.
 	 * @see org.springframework.transaction.interceptor.TransactionAttribute#getPropagationBehavior()
+	 * 传播行为
 	 */
 	Propagation propagation() default Propagation.REQUIRED;
 
@@ -97,6 +98,7 @@ public @interface Transactional {
 	 * isolation level.
 	 * @see org.springframework.transaction.interceptor.TransactionAttribute#getIsolationLevel()
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setValidateExistingTransaction
+	 * 隔离级别
 	 */
 	Isolation isolation() default Isolation.DEFAULT;
 

@@ -61,6 +61,8 @@ public interface MethodMatcher {
 	 * @param method the candidate method
 	 * @param targetClass the target class
 	 * @return whether or not this method matches statically
+	 *
+	 * TransactionAttributeSourcePointcut
 	 */
 	boolean matches(Method method, Class<?> targetClass);
 
@@ -73,6 +75,8 @@ public interface MethodMatcher {
 	 * @return whether or not a runtime match via the 3-arg
 	 * {@link #matches(java.lang.reflect.Method, Class, Object[])} method
 	 * is required if static matching passed
+	 *
+	 * 这个类总共三个方法，如果这个值为true，就会处理第三个方法
 	 */
 	boolean isRuntime();
 

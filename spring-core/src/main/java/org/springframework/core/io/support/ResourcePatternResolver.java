@@ -71,6 +71,7 @@ public interface ResourcePatternResolver extends ResourceLoader {
 	 * @return the corresponding Resource objects
 	 * @throws IOException in case of I/O errors
 	 */
+	// 注解： GenericApplicationContext
 	Resource[] getResources(String locationPattern) throws IOException;
 
 }
