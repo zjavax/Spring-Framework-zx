@@ -461,6 +461,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			if (bean instanceof ImportAware) {
 				ImportRegistry ir = this.beanFactory.getBean(IMPORT_REGISTRY_BEAN_NAME, ImportRegistry.class);
 				AnnotationMetadata importingClass = ir.getImportingClassFor(bean.getClass().getSuperclass().getName());
+				// 上面旧版代码 import直接导入不行 ，需要配置 Configuration 注解
+
+//				新版代码支持import导入，也支持importaware上加 @Configuration
+//				AnnotationMetadata importingClass = ir.getImportingClassFor(ClassUtils.getUserClass(bean).getName());
 				if (importingClass != null) {
 					((ImportAware) bean).setImportMetadata(importingClass);
 				}
