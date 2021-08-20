@@ -17,13 +17,13 @@ public class SpringApplication1 {
 
 		DispatcherServlet d = new DispatcherServlet(c);
 
-
+		// System.getproperty(“java.io.tmpdir”)是获取操作系统缓存的临时目录
 		String property = System.getProperty("java.io.tmpdir");
 
 		File base = new File(property);
 
 		Tomcat tomcatServer = new Tomcat();
-		tomcatServer.setPort(8081);
+		tomcatServer.setPort(8082);
 
 
 

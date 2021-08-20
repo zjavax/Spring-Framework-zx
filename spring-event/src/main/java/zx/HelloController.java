@@ -7,8 +7,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 public class HelloController {
 
-    @RequestMapping("/index2")
+	// http://localhost:8081/h
+    @RequestMapping("/h")
     public String hello() {
-        return "index";
+        return "index123";
     }
+
+	@RequestMapping("/hh")
+	public Object getUser() {
+		User user = new User();
+		user.setId("123");
+		return user;
+	}
 }
